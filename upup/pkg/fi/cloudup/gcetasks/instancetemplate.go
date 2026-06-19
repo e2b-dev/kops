@@ -555,10 +555,23 @@ type terraformNetworkInterface struct {
 	Subnetwork   *terraformWriter.Literal `cty:"subnetwork"`
 	AccessConfig []*terraformAccessConfig `cty:"access_config"`
 	StackType    *string                  `cty:"stack_type"`
+	AliasIPRange []*terraformAliasIPRange `cty:"alias_ip_range"`
 }
 
 type terraformAccessConfig struct {
 	NatIP *terraformWriter.Literal `cty:"nat_ip"`
+}
+
+// terraformAliasIPRange renders google_compute_instance_template's
+// network_interface.alias_ip_range block. For the GCP-native (IP-alias) CNI this
+// carries the per-node pod alias range (a /<nodeCIDRMaskSize> slice drawn from
+// the subnet's "pods-<cluster>" secondary range). Without it GCE never assigns a
+// node a pod CIDR, the cloud-controller-manager CloudAllocator has nothing to
+// copy into node.spec.podCIDR, and every node stays NotReady with
+// "cni plugin not initialized".
+type terraformAliasIPRange struct {
+	IPCIDRRange         string `cty:"ip_cidr_range"`
+	SubnetworkRangeName string `cty:"subnetwork_range_name"`
 }
 
 type terraformGuestAccelerator struct {
@@ -585,6 +598,17 @@ func addNetworks(stackType *string, network *Network, subnet *Subnet, networkInt
 			}
 
 			tf.AccessConfig = append(tf.AccessConfig, tac)
+		}
+
+		// Render pod alias IP ranges (IP-alias / VPC-native CNI). mapToGCE has
+		// already populated g.AliasIpRanges from InstanceTemplate.AliasIPRanges;
+		// without emitting them here the Terraform target would silently drop the
+		// per-node pod range, leaving nodes without a podCIDR (NotReady).
+		for _, gar := range g.AliasIpRanges {
+			tf.AliasIPRange = append(tf.AliasIPRange, &terraformAliasIPRange{
+				IPCIDRRange:         gar.IpCidrRange,
+				SubnetworkRangeName: gar.SubnetworkRangeName,
+			})
 		}
 
 		ni = append(ni, tf)

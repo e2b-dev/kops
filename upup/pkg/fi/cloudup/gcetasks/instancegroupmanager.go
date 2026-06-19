@@ -200,6 +200,7 @@ type terraformInstanceGroupManager struct {
 
 type terraformUpdatePolicy struct {
 	MinimalAction string `cty:"minimal_action"`
+	MaxUnavailableFixed int `cty:"max_unavailable_fixed"`
 	Type          string `cty:"type"`
 }
 
@@ -221,6 +222,7 @@ func (_ *InstanceGroupManager) RenderTerraform(t *terraform.TerraformTarget, a, 
 	if policy := e.UpdatePolicy; policy != nil {
 		tf.UpdatePolicy = &terraformUpdatePolicy{
 			MinimalAction: policy.MinimalAction,
+			MaxUnavailableFixed: 1,
 			Type:          policy.Type,
 		}
 	}
