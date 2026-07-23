@@ -83,6 +83,27 @@ $ terraform apply
 
 Wait for the cluster to initialize. If all goes well, you should have a working Kubernetes cluster!
 
+#### Migrating GCE project IAM resources
+
+GCE Terraform output now manages the control-plane and node service-account
+roles with additive `google_project_iam_member` resources instead of
+authoritative `google_project_iam_binding` resources. Existing Terraform state
+does not automatically associate the new resource type with the old addresses.
+
+After regenerating the Terraform configuration, but before planning or applying
+it, remove any old addresses that are present from Terraform state:
+
+```
+$ terraform state rm 'google_project_iam_binding.serviceaccount-control-plane'
+$ terraform state rm 'google_project_iam_binding.serviceaccount-nodes'
+```
+
+Removing these addresses from Terraform state does not remove the IAM grants
+from GCP. Review the next plan and confirm it creates the corresponding
+`google_project_iam_member` resources without destroying project IAM bindings.
+This prevents the old authoritative resources from removing the grants after
+the additive resources have been created.
+
 #### Editing the cluster
 
 It's possible to use Terraform to make changes to your infrastructure as defined by kOps. In the example below we'd like to change some cluster configs:
