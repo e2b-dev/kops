@@ -429,8 +429,9 @@ resource "google_compute_instance_group_manager" "a-master-us-test1-a-minimal-ex
   name                           = "a-master-us-test1-a-minimal-example-com"
   target_size                    = 1
   update_policy {
-    minimal_action = "REPLACE"
-    type           = "OPPORTUNISTIC"
+    max_unavailable_fixed = 1
+    minimal_action        = "REPLACE"
+    type                  = "OPPORTUNISTIC"
   }
   version {
     instance_template = google_compute_instance_template.master-us-test1-a-minimal-example-com.self_link
@@ -447,8 +448,9 @@ resource "google_compute_instance_group_manager" "a-nodes-minimal-example-com" {
   name                           = "a-nodes-minimal-example-com"
   target_size                    = 1
   update_policy {
-    minimal_action = "REPLACE"
-    type           = "OPPORTUNISTIC"
+    max_unavailable_fixed = 1
+    minimal_action        = "REPLACE"
+    type                  = "OPPORTUNISTIC"
   }
   version {
     instance_template = google_compute_instance_template.nodes-minimal-example-com.self_link
@@ -577,14 +579,14 @@ resource "google_compute_subnetwork" "us-test1-minimal-example-com" {
   stack_type    = "IPV4_ONLY"
 }
 
-resource "google_project_iam_binding" "serviceaccount-control-plane" {
-  members = [format("serviceAccount:%s", google_service_account.control-plane.email)]
+resource "google_project_iam_member" "serviceaccount-control-plane" {
+  member  = format("serviceAccount:%s", google_service_account.control-plane.email)
   project = "testproject"
   role    = "roles/container.serviceAgent"
 }
 
-resource "google_project_iam_binding" "serviceaccount-nodes" {
-  members = [format("serviceAccount:%s", google_service_account.node.email)]
+resource "google_project_iam_member" "serviceaccount-nodes" {
+  member  = format("serviceAccount:%s", google_service_account.node.email)
   project = "testproject"
   role    = "roles/compute.viewer"
 }

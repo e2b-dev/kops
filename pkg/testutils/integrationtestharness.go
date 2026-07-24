@@ -56,6 +56,7 @@ import (
 	"k8s.io/kops/cloudmock/openstack/mocknetworking"
 	"k8s.io/kops/pkg/apis/kops"
 	"k8s.io/kops/pkg/featureflag"
+	"k8s.io/kops/pkg/nodemodel/wellknownassets"
 	"k8s.io/kops/pkg/pki"
 	"k8s.io/kops/upup/pkg/fi"
 	"k8s.io/kops/upup/pkg/fi/cloudup/awsup"
@@ -122,6 +123,7 @@ func (h *IntegrationTestHarness) Close() {
 
 	if h.originalKopsVersion != "" {
 		kopsroot.Version = h.originalKopsVersion
+		wellknownassets.ResetCachesForTesting()
 	}
 
 	if h.originalDefaultChannelBase != "" {
@@ -284,9 +286,11 @@ func (h *IntegrationTestHarness) SetupMockAWS() *awsup.MockAWSCloud {
 
 // SetupMockGCE configures a mock GCE cloud provider
 func (h *IntegrationTestHarness) SetupMockGCE() *gcemock.MockGCECloud {
-	project := "testproject"
-	region := "us-test1"
+	return h.SetupMockGCEForProject("testproject", "us-test1")
+}
 
+// SetupMockGCEForProject configures a mock GCE cloud provider for the specified project and region.
+func (h *IntegrationTestHarness) SetupMockGCEForProject(project, region string) *gcemock.MockGCECloud {
 	cloud := gcemock.InstallMockGCECloud(region, project)
 
 	cloud.Compute().Networks().Insert(project, &compute.Network{
@@ -369,4 +373,5 @@ func (h *IntegrationTestHarness) MockKopsVersion(version string) {
 
 	h.originalKopsVersion = kopsroot.Version
 	kopsroot.Version = version
+	wellknownassets.ResetCachesForTesting()
 }

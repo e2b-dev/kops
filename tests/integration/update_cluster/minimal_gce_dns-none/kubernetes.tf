@@ -469,8 +469,9 @@ resource "google_compute_instance_group_manager" "a-master-us-test1-a-minimal-gc
   name                           = "a-master-us-test1-a-minimal-gce-example-com"
   target_size                    = 1
   update_policy {
-    minimal_action = "REPLACE"
-    type           = "OPPORTUNISTIC"
+    max_unavailable_fixed = 1
+    minimal_action        = "REPLACE"
+    type                  = "OPPORTUNISTIC"
   }
   version {
     instance_template = google_compute_instance_template.master-us-test1-a-minimal-gce-example-com.self_link
@@ -487,8 +488,9 @@ resource "google_compute_instance_group_manager" "a-nodes-minimal-gce-example-co
   name                           = "a-nodes-minimal-gce-example-com"
   target_size                    = 1
   update_policy {
-    minimal_action = "REPLACE"
-    type           = "OPPORTUNISTIC"
+    max_unavailable_fixed = 1
+    minimal_action        = "REPLACE"
+    type                  = "OPPORTUNISTIC"
   }
   version {
     instance_template = google_compute_instance_template.nodes-minimal-gce-example-com.self_link
@@ -505,8 +507,9 @@ resource "google_compute_instance_group_manager" "b-nodes-minimal-gce-example-co
   name                           = "b-nodes-minimal-gce-example-com"
   target_size                    = 1
   update_policy {
-    minimal_action = "REPLACE"
-    type           = "OPPORTUNISTIC"
+    max_unavailable_fixed = 1
+    minimal_action        = "REPLACE"
+    type                  = "OPPORTUNISTIC"
   }
   version {
     instance_template = google_compute_instance_template.nodes-minimal-gce-example-com.self_link
@@ -666,14 +669,14 @@ resource "google_compute_subnetwork" "us-test1-minimal-gce-example-com" {
   stack_type    = "IPV4_ONLY"
 }
 
-resource "google_project_iam_binding" "serviceaccount-control-plane" {
-  members = [format("serviceAccount:%s", google_service_account.control-plane.email)]
+resource "google_project_iam_member" "serviceaccount-control-plane" {
+  member  = format("serviceAccount:%s", google_service_account.control-plane.email)
   project = "testproject"
   role    = "roles/container.serviceAgent"
 }
 
-resource "google_project_iam_binding" "serviceaccount-nodes" {
-  members = [format("serviceAccount:%s", google_service_account.node.email)]
+resource "google_project_iam_member" "serviceaccount-nodes" {
+  member  = format("serviceAccount:%s", google_service_account.node.email)
   project = "testproject"
   role    = "roles/compute.viewer"
 }
